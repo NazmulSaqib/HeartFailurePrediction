@@ -1,10 +1,12 @@
+from lib2to3.pytree import LeafPattern
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from tkinter import *
 from tkinter import ttk
 import tkinter
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 import pickle
+from PIL import ImageTk, Image
 shivam = Tk()
 
 shivam.geometry("1200x500")
@@ -29,17 +31,7 @@ failure or not on the basis of patient details  '''
 para = Label(shivam,text = text,fg="white",bg="sky blue",font=("Comicsansms",13,"bold") ).place(x=30,y=250)
 Heart = Label(shivam,text = "Welcome to Heart Failure pridiction",fg="white",bg="sky blue",font=("Comicsansms",20,"bold")).place(x=20,y=200)
 Enter = Label(shivam,text = "Enter The Details",font=("Comicsansms",15,"bold")).place(x=650,y=110)
-# A = Label(shivam,text = "1",font=("Comicsansms",12,"bold")).place(x=520,y=170)
-# B = Label(shivam,text = "2",font=("Comicsansms",12,"bold")).place(x=675,y=170)
-# C = Label(shivam,text = "3",font=("Comicsansms",12,"bold")).place(x=825,y=170)
-# D = Label(shivam,text = "4",font=("Comicsansms",12,"bold")).place(x=520,y=270)
-# E = Label(shivam,text = "5",font=("Comicsansms",12,"bold")).place(x=675,y=270)
-# F = Label(shivam,text = "6",font=("Comicsansms",12,"bold")).place(x=825,y=270)
-# G = Label(shivam,text = "7",font=("Comicsansms",12,"bold")).place(x=520,y=370)
-# H = Label(shivam,text = "8",font=("Comicsansms",12,"bold")).place(x=675,y=370)
-# I = Label(shivam,text = "9",font=("Comicsansms",12,"bold")).place(x=825,y=370)
-# J = Label(shivam,text = "10",font=("Comicsansms",12,"bold")).place(x=520,y=470)
-# K = Label(shivam,text = "11",font=("Comicsansms",12,"bold")).place(x=675,y=470)
+# function for data Validation
 def getInput():
     result = []
     # age Variable
@@ -48,22 +40,12 @@ def getInput():
 
     # sex Variabel
     sex_var1 = sex_var.get()
-    if sex_var1 == 'M':
-        result.append(1)
-    elif sex_var1 == 'F':
-        result.append(0)
+    result.append(sex_var1)
     
     #chest pain Variabel
     chestPain1 = chestPain_var.get()
-    if chestPain1 == 'ATA':
-        result.append(1)
-    elif chestPain1 == 'NAP':
-        result.append(2)
-    elif chestPain1 == 'ASY':
-        result.append(0)
-    elif chestPain1 == 'TA':
-        result.append(3)
-
+    result.append(chestPain1)
+    
     # restingBp variable
     restingBP1 = int(restingBP.get())
     result.append(restingBP1)
@@ -81,26 +63,15 @@ def getInput():
     
     # Resting ECG Variable
     restingECG_var1 = restingECG_var.get()
-    if restingECG_var1 == 'Normal':
-        result.append(1)
-    elif restingECG_var1 == 'ST':
-        result.append(2)
-    elif restingECG_var1 == 'LVH':
-        result.append(0)
+    result.append(restingECG_var1)
 
     # maxHr Variable
     maxHr1 = int(maxHr.get())
-    if 60< maxHr1 < 202:
-        result.append(maxHr1)
-    else:
-        return 'Maximum Heart Rate Must Have Value in between 60 to 202 '
+    result.append(maxHr1)
     
     # exerciseAngina variable
     exerciseAngina_var1 = exerciseAngina.get()
-    if exerciseAngina_var1 == 'Y':
-        result.append(1)
-    else:
-        result.append(0)
+    result.append(exerciseAngina_var1)
     
     # old Peak Varialbe
     oldPeak1 = float(oldPeak.get())
@@ -108,22 +79,40 @@ def getInput():
 
     # st slope variabel
     stSlope_var1 = stSlope.get()
-    if stSlope_var1 == 'Up':
-        result.append(2)
-    elif stSlope_var1 == 'Flat':
-        result.append(1)
-    elif stSlope == 'Down':
-        result.append(0)
-    print(result)
-    # value prediction
-    my_model = pickle.load(open(r"E:\my_projects\Hear_Failure_Prediction\rf_model_99", "rb"))
-    print("my Results is:", my_model.predict([result]))
-    print(result)
-
-
+    result.append(stSlope_var1)
+    final_function(result)
+# function for data standrization and prediction   
+def final_function(my_list):
+    dataFrame = pickle.load(open(r'E:\my_projects\Hear_Failure_Prediction\new_data', 'rb'))
+    dataFrame.loc[len(dataFrame.index)] = my_list
+    # Data Encoding 
+    le = LabelEncoder()
+    dataFrame['Sex'] = le.fit_transform(dataFrame['Sex'])
+    dataFrame['ChestPainType'] = le.fit_transform(dataFrame['ChestPainType'])
+    dataFrame['RestingECG'] = le.fit_transform(dataFrame['RestingECG'])
+    dataFrame['ExerciseAngina'] = le.fit_transform(dataFrame['ExerciseAngina'])
+    dataFrame['ST_Slope'] = le.fit_transform(dataFrame['ST_Slope'])
+    # Standarization on data
+    sc = StandardScaler()
+    dataFrame1 = sc.fit_transform(dataFrame)
+    target_value = dataFrame1[-1]
+    model = pickle.load(open(r"E:\my_projects\Hear_Failure_Prediction\rf_model_99", 'rb'))
+    predicted_value = model.predict([target_value])
+    # for getting result on popup window
+    if predicted_value == 0:
+        pop_up("You Do Not have chances of Heart Failure")
+    else:
+        pop_up("You have chances of Heart Failure")
+        
+# function for pop up window
+def pop_up(value):
+    top = Toplevel(shivam)
+    top.geometry("750x270")
+    top.title("Heart Failure Prediction Result")
+    Label(top, text= value , font=('Mistral 18 bold')).place(x=150,y= 80)
 
 B = Button(shivam,text = "Submit",fg="white",bg="sky blue",font=("Comicsansms",12,"bold"), command=getInput).place(x=860,y=470)
-
+# all Entry widgets 
 age = Entry(shivam,bd=1,width=20)
 age.insert(0, 'Age')
 age.bind('<FocusIn>')
