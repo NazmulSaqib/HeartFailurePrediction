@@ -83,7 +83,7 @@ def getInput():
     final_function(result)
 # function for data standrization and prediction   
 def final_function(my_list):
-    dataFrame = pickle.load(open(r'E:\my_projects\Hear_Failure_Prediction\new_data', 'rb'))
+    dataFrame = pickle.load(open(r'new_data', 'rb'))
     dataFrame.loc[len(dataFrame.index)] = my_list
     # Data Encoding 
     le = LabelEncoder()
@@ -96,7 +96,7 @@ def final_function(my_list):
     sc = StandardScaler()
     dataFrame1 = sc.fit_transform(dataFrame)
     target_value = dataFrame1[-1]
-    model = pickle.load(open(r"E:\my_projects\Hear_Failure_Prediction\rf_model_99", 'rb'))
+    model = pickle.load(open(r"rf_model_99", 'rb'))
     predicted_value = model.predict([target_value])
     # for getting result on popup window
     if predicted_value == 0:
